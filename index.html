@@ -1,3 +1,259 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><meta name="theme-color" content="#101212"/><meta name="description" content="A local-first workspace for managing and migrating Minecraft Fabric mods."/><title>ModPilot — Fabric mod workspace</title>  <script type="module" crossorigin src="./assets/index-B4YKQqhL.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-Bt5GSjsB.css">
-</head><body><div id="root"></div></body></html>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b0e13">
+<title>ModPilot Lite</title>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<style>
+:root{
+  --bg:#0b0e13;--panel:#10151d;--panel2:#151b25;--line:#273040;--text:#e9edf5;--muted:#8792a5;
+  --accent:#7f9cf5;--good:#75d4a4;--warn:#e8c76a;--bad:#ef8b8b;--cyan:#79cae9;
+}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit}button{color:var(--text);background:#19212c;border:1px solid var(--line);border-radius:7px;padding:7px 10px;cursor:pointer}
+button:hover{background:#222c3a}button.primary{background:#607ce1;border-color:#708af0;font-weight:750}button.ghost{background:transparent}
+button.danger{color:#ffc2c2;background:#2a171b;border-color:#6d353c}input,select,textarea{background:#0c1118;color:var(--text);border:1px solid var(--line);border-radius:7px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#5871bd;box-shadow:0 0 0 2px #5871bd22}
+.app{height:100vh;display:grid;grid-template-rows:auto auto auto 1fr auto;min-width:1020px;overflow:hidden}
+.top{display:flex;align-items:center;gap:14px;min-height:66px;padding:10px 16px;border-bottom:1px solid var(--line);background:#0d1118}
+.brand{display:flex;align-items:center;gap:10px;min-width:260px}.logo{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;font-size:12px;font-weight:900;background:linear-gradient(135deg,#6888f1,#956cf0)}
+.listName{width:205px;border:0;background:transparent;padding:0;font-weight:780;font-size:15px}.listName:focus{box-shadow:none}.sub{font-size:10px;color:var(--muted);margin-top:2px}
+.target{display:flex;gap:7px;align-items:center;color:var(--muted);font-size:11px}.target input{width:72px;padding:7px}.actions{margin-left:auto;display:flex;gap:7px}
+.controls{padding:9px 16px;border-bottom:1px solid var(--line);display:grid;gap:8px;background:#0c1016}
+.search{display:flex;align-items:center;gap:8px;height:36px;border:1px solid var(--line);background:#111720;border-radius:8px;padding:0 10px}.search input{flex:1;border:0;background:transparent;padding:0}.search input:focus{box-shadow:none}
+.chips,.filterRow,.tags,.sorts,.tagList{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.chip{border-radius:999px;padding:5px 9px;color:#a6afbf;background:#131922}.chip b{font-size:9px;color:#6f7b8f;margin-left:5px}.chip.active{background:#263251;border-color:#536baa;color:white}
+.filterRow{justify-content:space-between}.tag{--tag:#7f9cf5;padding:4px 8px;border-radius:999px;font-size:10px;border:1px solid color-mix(in srgb,var(--tag) 55%,#273040);background:color-mix(in srgb,var(--tag) 13%,#111720)}
+.tag.active{box-shadow:inset 0 0 0 1px var(--tag);background:color-mix(in srgb,var(--tag) 25%,#111720)}.tag.exclude{text-decoration:line-through;opacity:.5}.addTag{width:27px;height:27px;padding:0;border-radius:50%}
+.bulk{min-height:42px;padding:6px 16px;display:none;align-items:center;gap:8px;background:#18213a;border-bottom:1px solid #324774}.bulk.show{display:flex}.bulk select{padding:6px 8px}
+.tableWrap{overflow:auto;position:relative}table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:12px}
+thead th{position:sticky;top:0;z-index:3;height:34px;padding:0 8px;text-align:left;background:#10151d;color:#8e99aa;border-bottom:1px solid var(--line);font-size:9px;text-transform:uppercase;letter-spacing:.04em}
+tbody td{height:48px;padding:5px 8px;border-bottom:1px solid #19212b;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}body.compact tbody td{height:38px;padding-top:3px;padding-bottom:3px}
+tbody tr:hover td{background:#121923}tbody tr.selected td{background:#18223a}tbody tr.off{opacity:.5}
+.check{width:38px;text-align:center!important}.toggleCol{width:52px;text-align:center!important}.menu{width:46px;text-align:center!important}
+th:nth-child(3),td:nth-child(3){width:260px}th:nth-child(4),td:nth-child(4){width:125px}th:nth-child(5),td:nth-child(5){width:120px}th:nth-child(6),td:nth-child(6){width:130px}th:nth-child(7),td:nth-child(7){width:205px}th:nth-child(8),td:nth-child(8){width:105px}th:nth-child(9),td:nth-child(9){width:230px}
+.modCell{display:flex;align-items:center;gap:9px;cursor:pointer}.icon{width:28px;height:28px;border-radius:6px;object-fit:cover;flex:0 0 auto}.fallback{display:grid;place-items:center;background:#242d3a;color:#afbacb;font-weight:800}
+.modText{min-width:0}.modName{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.modId{font-size:9px;color:#717d90;font-family:ui-monospace,Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini{margin-left:auto;border-radius:4px;padding:2px 5px;background:#26365f;color:#b8caff;font-size:8px;font-weight:750}.mono{font-family:ui-monospace,Consolas,monospace;color:#b8c0ce;white-space:nowrap}
+.status{font-weight:700;white-space:nowrap}.good{color:var(--good)}.bad{color:var(--bad)}.warn{color:var(--warn)}.cyan{color:var(--cyan)}.unknown{color:#7b8698}
+.dep{display:flex;gap:8px;color:#98a3b5;font-family:ui-monospace,Consolas,monospace}.note{white-space:nowrap;color:#9aa5b6}.muted{color:var(--muted)}
+.switch{width:31px;height:18px;border-radius:999px;padding:2px;background:#292f39}.switch span{display:block;width:12px;height:12px;border-radius:50%;background:#7c8593;transition:.15s}.switch.on{background:#275b49;border-color:#3a8067}.switch.on span{transform:translateX(11px);background:#8ce1ba}
+.rowBtn{opacity:0;padding:3px 7px;background:transparent}tr:hover .rowBtn{opacity:1}
+.footer{min-height:31px;padding:5px 16px;display:flex;gap:18px;align-items:center;border-top:1px solid var(--line);background:#0d1118;color:#6e798c;font-size:9px}.footer .help{margin-left:auto}
+.drawer{position:fixed;z-index:30;right:0;top:0;width:min(440px,92vw);height:100vh;background:#0f141b;border-left:1px solid #2a3342;box-shadow:-20px 0 50px #0009;display:flex;flex-direction:column}
+.drawerHeader{min-height:70px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.drawerHeader h2{margin:0;font-size:17px}.drawerHeader small{color:var(--muted)}
+.close{border:0;background:transparent;width:34px;height:34px;border-radius:50%;font-size:20px;padding:0}.drawerBody{overflow:auto;padding-bottom:30px}.section{padding:14px 16px;border-bottom:1px solid #1e2631;display:grid;gap:8px}
+.sectionTitle{display:flex;justify-content:space-between;font-size:10px;color:#98a3b5;text-transform:uppercase;letter-spacing:.05em;font-weight:800}.section input,.section textarea{width:100%;padding:8px 9px}.section textarea{min-height:105px;resize:vertical}
+.statusGrid{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:6px}.bigToggle,.metric{min-height:53px}.bigToggle.active{color:#a9ebc9;background:#17372d;border-color:#285c4c}.metric{border:1px solid var(--line);border-radius:7px;background:#121820;padding:7px 8px;display:flex;flex-direction:column;justify-content:center;gap:4px}.metric span{font-size:8px;color:var(--muted);text-transform:uppercase}.metric b{font-size:11px}
+.depList{display:grid;gap:4px}.depRow{min-height:31px;padding:5px 7px;display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:5px;align-items:center;border:1px solid #202936;background:#121820;border-radius:6px;color:#a2adbd}.depRow b{font-size:10px;color:#d0d6e0;overflow:hidden;text-overflow:ellipsis}.depRow small{font-size:8px;color:#707c90;font-family:ui-monospace,Consolas,monospace}.depRow.missing,.depRow.conflict{background:#221619;border-color:#643940;color:#ef9090}
+.depRow.click{cursor:pointer}.link{color:#9ab2ff;text-decoration:none;font-size:10px}.warningBox{background:#1b1612;color:#dcb7a0}.dangerZone{display:flex;justify-content:flex-end}
+.backdrop{position:fixed;z-index:25;inset:0;background:#0006}.historyList{padding:8px}.historyItem{padding:10px;margin-bottom:7px;border:1px solid var(--line);border-radius:8px;background:#121820;display:grid;gap:4px;font-size:10px}.historyMeta{display:flex;justify-content:space-between;color:#6e798c;font-size:8px;text-transform:uppercase}.historyItem button{justify-self:end;padding:4px 7px}
+.drop{position:fixed;z-index:100;inset:14px;border:2px dashed #7894eb;border-radius:16px;background:#10192aed;display:grid;place-items:center;font-size:22px;font-weight:800;color:#d0dcff}.toast{position:fixed;z-index:110;left:50%;bottom:45px;transform:translateX(-50%);padding:9px 14px;background:#222b38;border:1px solid #3a4658;border-radius:9px;box-shadow:0 10px 30px #0009;font-size:11px}
+.empty{min-height:260px;display:grid;place-items:center;align-content:center;gap:7px;color:#7d8799}.empty strong{color:#b8c0cd}
+input[type=checkbox]{accent-color:#7590ec}@media(max-width:1200px){th:nth-child(9),td:nth-child(9){display:none}.footer .help{display:none}}
+</style>
+</head>
+<body class="compact">
+<div id="app" class="app"></div>
+<script>
+"use strict";
+const DB_NAME="modpilot-lite-static", STORE="state", DB_KEY="main";
+const sysIds=new Set(["minecraft","java","fabricloader"]);
+const palette=["#7f9cf5","#75d4a4","#e8c76a","#c996f1","#79cae9","#ef9f7f","#ef8b8b","#a2d36e"];
+const blankDeps=()=>({depends:[],recommends:[],suggests:[],conflicts:[],breaks:[]});
+const initial={
+  listName:"My Fabric Mods",targetVersion:"26.3",compact:true,sortBy:"name",sortDir:"asc",
+  mods:[],tags:[
+    {id:crypto.randomUUID(),name:"성능",color:"#75d4a4"},
+    {id:crypto.randomUUID(),name:"UI",color:"#7f9cf5"},
+    {id:crypto.randomUUID(),name:"필수",color:"#e8c76a"}
+  ],history:[]
+};
+let state=structuredClone(initial),view={search:"",quick:"all",includeTags:[],excludeTags:[],selected:new Set(),detail:null,history:false,checking:"",drag:false};
+let detailDraft=null,lastSelectedIndex=null,toastTimer=null;
+
+function dbOpen(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB_NAME,1);r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE)};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+async function dbLoad(){const db=await dbOpen();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,"readonly");const r=tx.objectStore(STORE).get(DB_KEY);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+async function persist(){try{const db=await dbOpen();const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(state,DB_KEY)}catch(e){console.error(e)}}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function clone(x){return structuredClone(x)}
+function now(){return new Date().toISOString()}
+function fmtTime(x){return new Intl.DateTimeFormat("ko-KR",{month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}).format(new Date(x))}
+function toast(msg){let el=document.querySelector(".toast");if(el)el.remove();el=document.createElement("div");el.className="toast";el.textContent=msg;document.body.appendChild(el);clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.remove(),2500)}
+function addHistory(e){state.history.unshift({id:crypto.randomUUID(),at:now(),...e});state.history=state.history.slice(0,1000)}
+function tagById(id){return state.tags.find(t=>t.id===id)}
+function modsById(){const map=new Map();for(const m of state.mods){if(!map.has(m.id))map.set(m.id,[]);map.get(m.id).push(m)}return map}
+function requiredBy(){const map=new Map();for(const m of state.mods)for(const d of m.deps.depends){if(!map.has(d.id))map.set(d.id,[]);map.get(d.id).push(m.key)}return map}
+function issuesFor(mod){const by=modsById();const missing=mod.deps.depends.filter(d=>!(by.get(d.id)||[]).some(m=>m.enabled)).map(d=>d.id);const conflicts=[...mod.deps.conflicts,...mod.deps.breaks].filter(d=>(by.get(d.id)||[]).some(m=>m.enabled)).map(d=>d.id);return{missing,conflicts}}
+function affected(mod){const rb=requiredBy(),out=new Set(),q=[...(rb.get(mod.id)||[])];while(q.length){const k=q.shift();if(out.has(k))continue;out.add(k);const c=state.mods.find(m=>m.key===k);if(c)for(const n of rb.get(c.id)||[])q.push(n)}out.delete(mod.key);return[...out]}
+function patchMod(key,patch,label){const old=state.mods.find(m=>m.key===key);if(!old)return;const before={};for(const k of Object.keys(patch))before[k]=clone(old[k]);Object.assign(old,patch);addHistory({kind:"edit",modKey:key,modName:old.name,label,before,after:clone(patch)});persist();render()}
+function toggleEnabled(mod){if(mod.enabled){const a=affected(mod).filter(k=>state.mods.find(m=>m.key===k)?.enabled);if(a.length){const names=a.slice(0,8).map(k=>state.mods.find(m=>m.key===k)?.name).filter(Boolean);if(!confirm(`${mod.name}을 OFF하면 종속된 활성 모드 ${a.length}개가 영향을 받아.\\n\\n${names.join("\\n")}${a.length>8?`\\n외 ${a.length-8}개`:""}\\n\\n그래도 OFF할까?`))return}}patchMod(mod.key,{enabled:!mod.enabled},mod.enabled?"ON → OFF":"OFF → ON")}
+function removeMod(mod){const a=affected(mod).filter(k=>state.mods.find(m=>m.key===k)?.enabled);if(!confirm(`${mod.name}을 목록에서 삭제할까?${a.length?`\\n\\n종속된 활성 모드 ${a.length}개가 영향을 받아.`:""}`))return;addHistory({kind:"delete",modKey:mod.key,modName:mod.name,label:"모드 삭제",before:clone(mod)});state.mods=state.mods.filter(m=>m.key!==mod.key);view.selected.delete(mod.key);if(view.detail===mod.key)view.detail=null;persist();render()}
+function hex(buf){return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("")}
+async function sha1(file){return hex(await crypto.subtle.digest("SHA-1",await file.arrayBuffer()))}
+function normDeps(obj){if(!obj||typeof obj!=="object"||Array.isArray(obj))return[];return Object.entries(obj).map(([id,v])=>({id,constraints:Array.isArray(v)?v.map(String):[String(v)]}))}
+function authors(v){const a=Array.isArray(v)?v:(v?[v]:[]);return a.map(x=>typeof x==="string"?x:(x&&x.name)||"Unknown").filter(Boolean)}
+function iconPath(icon){if(!icon)return null;if(typeof icon==="string")return icon;const e=Object.entries(icon).sort((a,b)=>Number(b[0])-Number(a[0]));return e[0]?.[1]||null}
+async function blobDataUrl(blob){return new Promise(res=>{const r=new FileReader();r.onload=()=>res(typeof r.result==="string"?r.result:null);r.onerror=()=>res(null);r.readAsDataURL(blob)})}
+async function parseJar(file){
+  const zip=await JSZip.loadAsync(file),entry=zip.file("fabric.mod.json");if(!entry)throw new Error("fabric.mod.json 없음");
+  const meta=JSON.parse(await entry.async("string"));if(!meta.id)throw new Error("mod id 없음");
+  const deps={};for(const k of ["depends","recommends","suggests","conflicts","breaks"])deps[k]=normDeps(meta[k]);
+  const systemDeps=deps.depends.filter(d=>sysIds.has(d.id));deps.depends=deps.depends.filter(d=>!sysIds.has(d.id));
+  let iconDataUrl=null,p=iconPath(meta.icon);if(p){const ie=zip.file(String(p).replace(/^\/+/,""));if(ie)iconDataUrl=await blobDataUrl(await ie.async("blob"))}
+  return{key:`${meta.id}:${crypto.randomUUID()}`,id:meta.id,name:meta.name||meta.id,version:meta.version||"unknown",fileName:file.name,enabled:true,description:meta.description||"",authors:authors(meta.authors),iconDataUrl,sha1:await sha1(file),tags:[],notes:"",replacementName:"",replacementUrl:"",deps,systemDeps,modrinthProjectId:null,modrinthVersionId:null,targetSupported:null,updateAvailable:null,latestTargetVersion:null,lastChecked:null,importedAt:now()}
+}
+async function importJars(files){
+  files=[...files].filter(f=>f.name.toLowerCase().endsWith(".jar"));if(!files.length)return;
+  const ok=[],err=[];for(const f of files){try{ok.push(await parseJar(f))}catch(e){err.push(`${f.name}: ${e.message||e}`)}}
+  for(const m of ok){state.mods.push(m);addHistory({kind:"add",modKey:m.key,modName:m.name,label:"JAR import",after:clone(m)})}
+  await persist();render();if(ok.length)toast(`${ok.length}개 모드를 추가했어.`);if(err.length)alert(`가져오지 못한 파일:\\n\\n${err.slice(0,12).join("\\n")}${err.length>12?"\\n...":""}`)
+}
+async function modrinthCheck(){
+  if(!state.mods.length)return;view.checking=`0 / ${state.mods.length}`;render();
+  try{
+    const hashes=state.mods.filter(m=>m.sha1).map(m=>m.sha1),found={};
+    for(let i=0;i<hashes.length;i+=100){
+      const r=await fetch("https://api.modrinth.com/v2/version_files",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({hashes:hashes.slice(i,i+100),algorithm:"sha1"})});
+      if(!r.ok)throw new Error(`Modrinth 파일 조회 실패 (${r.status})`);Object.assign(found,await r.json())
+    }
+    const cache=new Map();let done=0;
+    for(const m of state.mods){
+      const cur=m.sha1?found[m.sha1]:null;
+      if(!cur){m.targetSupported=null;m.updateAvailable=null;m.lastChecked=now()}
+      else{
+        m.modrinthProjectId=cur.project_id;m.modrinthVersionId=cur.id;
+        if(!cache.has(cur.project_id)){
+          const p=new URLSearchParams({loaders:JSON.stringify(["fabric"]),game_versions:JSON.stringify([state.targetVersion]),include_changelog:"false"});
+          cache.set(cur.project_id,fetch(`https://api.modrinth.com/v2/project/${encodeURIComponent(cur.project_id)}/version?${p}`).then(r=>{if(!r.ok)throw new Error(`Modrinth 버전 조회 실패 (${r.status})`);return r.json()}).then(a=>a.sort((x,y)=>new Date(y.date_published)-new Date(x.date_published))))
+        }
+        const vs=await cache.get(cur.project_id);m.targetSupported=vs.length>0;m.updateAvailable=vs.length? !vs.some(v=>v.id===cur.id):false;m.latestTargetVersion=vs[0]?.version_number||null;m.lastChecked=now()
+      }
+      done++;view.checking=`${done} / ${state.mods.length}`;if(done%6===0)render()
+    }
+    await persist();toast("Modrinth 업데이트 확인 완료")
+  }catch(e){alert(e.message||e)}finally{view.checking="";render()}
+}
+function filteredMods(){
+  const q=view.search.trim().toLowerCase();let a=state.mods.filter(m=>{
+    const issue=issuesFor(m),hay=`${m.name} ${m.id} ${m.version} ${m.notes}`.toLowerCase();
+    if(q&&!hay.includes(q))return false;if(view.includeTags.length&&!view.includeTags.every(t=>m.tags.includes(t)))return false;if(view.excludeTags.some(t=>m.tags.includes(t)))return false;
+    if(view.quick==="on"&&!m.enabled)return false;if(view.quick==="off"&&m.enabled)return false;if(view.quick==="updates"&&!m.updateAvailable)return false;if(view.quick==="unsupported"&&m.targetSupported!==false)return false;if(view.quick==="replacement"&&!m.replacementName)return false;if(view.quick==="issues"&&!issue.missing.length&&!issue.conflicts.length)return false;return true
+  });
+  const dir=state.sortDir==="asc"?1:-1;a.sort((x,y)=>{let av,bv;switch(state.sortBy){case"enabled":av=x.enabled?1:0;bv=y.enabled?1:0;break;case"update":av=x.updateAvailable?1:0;bv=y.updateAvailable?1:0;break;case"support":av=x.targetSupported===false?2:x.targetSupported===true?1:0;bv=y.targetSupported===false?2:y.targetSupported===true?1:0;break;case"version":av=x.version;bv=y.version;break;default:av=x.name.toLowerCase();bv=y.name.toLowerCase()}return av<bv?-dir:av>bv?dir:x.name.localeCompare(y.name)});return a
+}
+function counts(){return{all:state.mods.length,on:state.mods.filter(m=>m.enabled).length,off:state.mods.filter(m=>!m.enabled).length,updates:state.mods.filter(m=>m.updateAvailable).length,unsupported:state.mods.filter(m=>m.targetSupported===false).length,replacement:state.mods.filter(m=>m.replacementName).length,issues:state.mods.filter(m=>{const x=issuesFor(m);return x.missing.length||x.conflicts.length}).length}}
+function tagHtml(id){const t=tagById(id);return t?`<span class="tag" style="--tag:${esc(t.color)}">${esc(t.name)}</span>`:""}
+function render(){
+  document.body.classList.toggle("compact",!!state.compact);
+  const a=filteredMods(),c=counts(),rb=requiredBy(),allVisible=a.length&&a.every(m=>view.selected.has(m.key));
+  const app=document.getElementById("app");
+  app.innerHTML=`
+  ${view.drag?'<div class="drop">Fabric .jar 파일을 놓아줘</div>':""}
+  <header class="top">
+    <div class="brand"><div class="logo">MP</div><div><input id="listName" class="listName" value="${esc(state.listName)}"><div class="sub">${state.mods.length} mods · Fabric only</div></div></div>
+    <div class="target"><span>Target</span><input id="target" value="${esc(state.targetVersion)}"></div>
+    <div class="actions">
+      <button id="addJar" class="primary">+ JAR 추가</button><button id="checkUpdates" ${view.checking?"disabled":""}>${view.checking?`확인 ${view.checking}`:"업데이트 확인"}</button>
+      <button id="openHistory">History</button><button id="export" class="ghost">Export</button><button id="importJsonBtn" class="ghost">Import</button>
+    </div>
+    <input id="jarInput" type="file" accept=".jar" multiple hidden><input id="jsonInput" type="file" accept=".json" hidden>
+  </header>
+  <section class="controls">
+    <div class="search"><span>⌕</span><input id="search" placeholder="이름, mod ID, 버전, 메모 검색" value="${esc(view.search)}">${view.search?'<button id="clearSearch" class="ghost">×</button>':""}</div>
+    <div class="chips">${[["all","전체"],["on","ON"],["off","OFF"],["updates","업데이트"],["unsupported","미지원"],["replacement","대체"],["issues","문제"]].map(([id,label])=>`<button class="chip ${view.quick===id?"active":""}" data-quick="${id}">${label}<b>${c[id]}</b></button>`).join("")}</div>
+    <div class="filterRow">
+      <div class="tags"><span class="muted">Tags</span>${state.tags.map(t=>`<button class="tag ${view.includeTags.includes(t.id)?"active":""} ${view.excludeTags.includes(t.id)?"exclude":""}" data-tagfilter="${t.id}" style="--tag:${esc(t.color)}" title="클릭: 포함 / Shift+클릭: 제외">${esc(t.name)}</button>`).join("")}<button id="createTag" class="addTag">+</button></div>
+      <div class="sorts"><select id="sortBy"><option value="name">이름</option><option value="enabled">ON/OFF</option><option value="update">업데이트</option><option value="support">지원 상태</option><option value="version">버전</option></select><button id="sortDir">${state.sortDir==="asc"?"↑":"↓"}</button><button id="compact">${state.compact?"Compact":"Normal"}</button></div>
+    </div>
+  </section>
+  <div class="bulk ${view.selected.size?"show":""}"><b>${view.selected.size}개 선택</b><button id="bulkOn">ON</button><button id="bulkOff">OFF</button><select id="bulkTag"><option value="">태그 추가…</option>${state.tags.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("")}</select><button id="bulkDelete" class="danger">삭제</button><button id="clearSel" class="ghost">선택 해제</button></div>
+  <main class="tableWrap">
+    <table><thead><tr><th class="check"><input id="selectAll" type="checkbox" ${allVisible?"checked":""}></th><th class="toggleCol">ON</th><th>모드</th><th>설치 버전</th><th>Target ${esc(state.targetVersion)}</th><th>업데이트</th><th>태그</th><th>종속성</th><th>메모</th><th class="menu"></th></tr></thead>
+    <tbody>${a.map((m,i)=>rowHtml(m,i,rb)).join("")}</tbody></table>
+    ${a.length?"":'<div class="empty"><strong>표시할 모드가 없어</strong><span>필터를 해제하거나 Fabric JAR을 추가해봐.</span></div>'}
+  </main>
+  <footer class="footer"><span>표시 ${a.length} / 전체 ${state.mods.length}</span><span class="help">Shift+체크: 범위 선택 · Ctrl+A: 현재 필터 전체 선택 · 태그 Shift+클릭: 제외</span><button id="reset" class="ghost">데이터 초기화</button></footer>
+  ${view.detail?detailHtml(state.mods.find(m=>m.key===view.detail),rb):""}
+  ${view.history?historyHtml():""}
+  ${(view.detail||view.history)?'<div id="backdrop" class="backdrop"></div>':""}
+  `;
+  document.getElementById("sortBy").value=state.sortBy;
+  bind(a);
+}
+function rowHtml(m,i,rb){
+  const issue=issuesFor(m),tags=m.tags.slice(0,3).map(tagHtml).join("")+(m.tags.length>3?`<span class="muted">+${m.tags.length-3}</span>`:"");
+  const target=m.targetSupported===true?'<span class="status good">✓ 지원</span>':m.targetSupported===false?'<span class="status bad">✕ 미지원</span>':'<span class="status unknown">? 미확인</span>';
+  let up='<span class="status unknown">미확인</span>';if(m.updateAvailable===true)up=`<span class="status cyan">↑ ${esc(m.latestTargetVersion||"가능")}</span>`;else if(m.updateAvailable===false&&m.targetSupported===true)up='<span class="status good">최신/호환</span>';else if(m.updateAvailable===false&&m.targetSupported===false)up='<span class="status bad">없음</span>';
+  return`<tr class="${view.selected.has(m.key)?"selected ":""}${m.enabled?"":"off"}">
+    <td class="check"><input type="checkbox" data-select="${esc(m.key)}" data-index="${i}" ${view.selected.has(m.key)?"checked":""}></td>
+    <td class="toggleCol"><button class="switch ${m.enabled?"on":""}" data-toggle="${esc(m.key)}"><span></span></button></td>
+    <td><div class="modCell" data-detail="${esc(m.key)}">${m.iconDataUrl?`<img class="icon" src="${m.iconDataUrl}">`:`<div class="icon fallback">${esc(m.name.slice(0,1).toUpperCase())}</div>`}<div class="modText"><div class="modName">${esc(m.name)}</div><div class="modId">${esc(m.id)}</div></div>${m.replacementName?'<span class="mini">대체</span>':""}</div></td>
+    <td class="mono">${esc(m.version)}</td><td>${target}</td><td>${up}</td><td><div class="tagList">${tags}</div></td>
+    <td><div class="dep"><span>→ ${m.deps.depends.length}</span><span>← ${(rb.get(m.id)||[]).length}</span>${issue.missing.length||issue.conflicts.length?'<span class="warn">⚠</span>':""}</div></td>
+    <td class="note" title="${esc(m.notes)}">${m.notes?esc(m.notes):'<span class="muted">—</span>'}</td><td class="menu"><button class="rowBtn" data-detail="${esc(m.key)}">•••</button></td></tr>`
+}
+function detailHtml(m,rb){
+  if(!m)return"";detailDraft=detailDraft&&detailDraft.key===m.key?detailDraft:{key:m.key,notes:m.notes,replacementName:m.replacementName,replacementUrl:m.replacementUrl};
+  const dep=(items,kind="")=>items.length?`<div class="depList">${items.map(d=>{const present=sysIds.has(d.id)||(modsById().get(d.id)||[]).some(x=>x.enabled);return`<div class="depRow ${(!present&&kind!=="optional")?"missing":""} ${(kind==="conflict"&&present)?"conflict":""}"><span>${kind==="conflict"?"×":kind==="optional"?"○":present?"✓":"!"}</span><b>${esc(d.id)}</b><small>${esc(d.constraints.join(" 또는 "))}</small></div>`}).join("")}</div>`:'<div class="muted">없음</div>';
+  const r=(rb.get(m.id)||[]).map(k=>state.mods.find(x=>x.key===k)).filter(Boolean);
+  const iss=issuesFor(m);
+  const target=m.targetSupported===true?"지원":m.targetSupported===false?"미지원":"미확인";
+  const update=m.updateAvailable===true?(m.latestTargetVersion||"가능"):m.updateAvailable===false?"없음":"미확인";
+  return`<aside class="drawer"><div class="drawerHeader"><div><h2>${esc(m.name)}</h2><small>${esc(m.id)} · ${esc(m.version)}</small></div><button id="closeDrawer" class="close">×</button></div><div class="drawerBody">
+    <section class="section"><div class="sectionTitle">상태</div><div class="statusGrid"><button id="detailToggle" class="bigToggle ${m.enabled?"active":""}">${m.enabled?"● ON":"○ OFF"}</button><div class="metric"><span>Target</span><b>${target}</b></div><div class="metric"><span>Update</span><b>${esc(update)}</b></div></div>${m.modrinthProjectId?`<a class="link" target="_blank" rel="noreferrer" href="https://modrinth.com/mod/${esc(m.modrinthProjectId)}">Modrinth 프로젝트 열기 ↗</a>`:""}</section>
+    <section class="section"><div class="sectionTitle">대체 모드</div><input id="repName" value="${esc(detailDraft.replacementName)}" placeholder="예: Too Many Shortcuts"><input id="repUrl" value="${esc(detailDraft.replacementUrl)}" placeholder="선택: 링크">${detailDraft.replacementUrl?`<a class="link" target="_blank" rel="noreferrer" href="${esc(detailDraft.replacementUrl)}">대체 모드 열기 ↗</a>`:""}</section>
+    <section class="section"><div class="sectionTitle">태그</div><div class="tags">${state.tags.map(t=>`<button class="tag ${m.tags.includes(t.id)?"active":""}" data-detailtag="${t.id}" style="--tag:${esc(t.color)}">${esc(t.name)}</button>`).join("")}<button id="createTag2" class="addTag">+</button></div></section>
+    <section class="section"><div class="sectionTitle">Dependencies <span>${m.deps.depends.length}</span></div>${dep(m.deps.depends)}${m.systemDeps.length?`<div class="sectionTitle">시스템 요구사항</div>${dep(m.systemDeps)}`:""}${m.deps.recommends.length?`<div class="sectionTitle">Recommended</div>${dep(m.deps.recommends,"optional")}`:""}${m.deps.suggests.length?`<div class="sectionTitle">Suggested</div>${dep(m.deps.suggests,"optional")}`:""}${m.deps.conflicts.length||m.deps.breaks.length?`<div class="sectionTitle">Conflicts / Breaks</div>${dep([...m.deps.conflicts,...m.deps.breaks],"conflict")}`:""}</section>
+    <section class="section"><div class="sectionTitle">Required by <span>${r.length}</span></div>${r.length?`<div class="depList">${r.map(x=>`<div class="depRow click" data-detail="${esc(x.key)}"><span>←</span><b>${esc(x.name)}</b><small>${esc(x.version)}</small></div>`).join("")}</div>`:'<div class="muted">현재 목록에서 필수로 요구하는 모드가 없어.</div>'}</section>
+    ${iss.missing.length||iss.conflicts.length?`<section class="section warningBox"><div class="sectionTitle">⚠ 종속성 문제</div>${iss.missing.length?`<div><b>누락:</b> ${esc(iss.missing.join(", "))}</div>`:""}${iss.conflicts.length?`<div><b>충돌:</b> ${esc(iss.conflicts.join(", "))}</div>`:""}</section>`:""}
+    <section class="section"><div class="sectionTitle">메모</div><textarea id="notes" placeholder="호환성, 설정, 교체 계획 등을 적어둬.">${esc(detailDraft.notes)}</textarea><button id="saveDetail" class="primary">메모 / 대체 모드 저장</button></section>
+    <section class="section"><div class="sectionTitle">최근 History</div>${state.history.filter(h=>h.modKey===m.key).slice(0,8).map(h=>`<div style="font-size:10px;color:#8a95a7">${fmtTime(h.at)} · <b>${esc(h.label)}</b></div>`).join("")||'<div class="muted">기록 없음</div>'}</section>
+    <section class="section dangerZone"><button id="deleteMod" class="danger">목록에서 삭제</button></section>
+  </div></aside>`
+}
+function historyHtml(){return`<aside class="drawer"><div class="drawerHeader"><div><h2>History</h2><small>최근 ${state.history.length}개 변경</small></div><button id="closeHistory" class="close">×</button></div><div class="drawerBody historyList">${state.history.map(h=>`<div class="historyItem"><div class="historyMeta"><span>${fmtTime(h.at)}</span><span>${esc(h.kind)}</span></div><b>${esc(h.modName||"여러 모드")}</b><div>${esc(h.label)}</div>${["add","delete","edit"].includes(h.kind)?`<button data-undo="${h.id}">Undo</button>`:""}</div>`).join("")||'<div class="empty">아직 변경 기록이 없어.</div>'}</div></aside>`}
+function undo(id){const h=state.history.find(x=>x.id===id);if(!h)return;if(h.kind==="add"&&h.modKey){state.mods=state.mods.filter(m=>m.key!==h.modKey);addHistory({kind:"undo",modKey:h.modKey,modName:h.modName,label:`되돌림: ${h.label}`})}
+  else if(h.kind==="delete"&&h.before){if(!state.mods.some(m=>m.key===h.before.key))state.mods.push(clone(h.before));addHistory({kind:"undo",modKey:h.before.key,modName:h.before.name,label:`되돌림: ${h.label}`})}
+  else if(h.kind==="edit"&&h.modKey&&h.before){const m=state.mods.find(x=>x.key===h.modKey);if(m){Object.assign(m,clone(h.before));addHistory({kind:"undo",modKey:h.modKey,modName:h.modName,label:`되돌림: ${h.label}`})}}
+  persist();render()
+}
+function createTag(){const name=prompt("새 태그 이름");if(!name?.trim())return;const def=palette[state.tags.length%palette.length],color=prompt("태그 색상 (#RRGGBB)",def)||def;state.tags.push({id:crypto.randomUUID(),name:name.trim(),color});persist();render()}
+function bulkEnabled(on){for(const m of state.mods)if(view.selected.has(m.key))m.enabled=on;addHistory({kind:"bulk",label:`${view.selected.size}개 모드 ${on?"ON":"OFF"}`});persist();render()}
+function bulkDelete(){if(!view.selected.size||!confirm(`선택한 ${view.selected.size}개 모드를 삭제할까?`))return;for(const m of state.mods.filter(x=>view.selected.has(x.key)))addHistory({kind:"delete",modKey:m.key,modName:m.name,label:"일괄 삭제",before:clone(m)});state.mods=state.mods.filter(m=>!view.selected.has(m.key));view.selected.clear();persist();render()}
+function exportJson(){const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=(state.listName.replace(/[^\w가-힣.-]+/g,"_")||"modlist")+".json";a.click();URL.revokeObjectURL(u)}
+async function importJson(file){try{const x=JSON.parse(await file.text());if(!Array.isArray(x.mods)||!Array.isArray(x.tags))throw new Error("올바른 백업이 아니야.");state=x;view.selected.clear();view.detail=null;await persist();render();toast("백업을 불러왔어.")}catch(e){alert(e.message||e)}}
+function bind(a){
+  const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+  $("#listName").onchange=e=>{state.listName=e.target.value;persist()};$("#target").onchange=e=>{state.targetVersion=e.target.value;persist();render()};
+  $("#addJar").onclick=()=>$("#jarInput").click();$("#jarInput").onchange=e=>importJars(e.target.files);$("#checkUpdates").onclick=modrinthCheck;$("#openHistory").onclick=()=>{view.history=true;render()};
+  $("#export").onclick=exportJson;$("#importJsonBtn").onclick=()=>$("#jsonInput").click();$("#jsonInput").onchange=e=>e.target.files?.[0]&&importJson(e.target.files[0]);
+  $("#search").oninput=e=>{view.search=e.target.value;render()};$("#clearSearch")?.addEventListener("click",()=>{view.search="";render()});
+  $$(".chip").forEach(b=>b.onclick=()=>{view.quick=b.dataset.quick;render()});
+  $$("[data-tagfilter]").forEach(b=>b.onclick=e=>{const id=b.dataset.tagfilter;if(e.shiftKey){view.includeTags=view.includeTags.filter(x=>x!==id);view.excludeTags=view.excludeTags.includes(id)?view.excludeTags.filter(x=>x!==id):[...view.excludeTags,id]}else{view.excludeTags=view.excludeTags.filter(x=>x!==id);view.includeTags=view.includeTags.includes(id)?view.includeTags.filter(x=>x!==id):[...view.includeTags,id]}render()});
+  $("#createTag").onclick=createTag;$("#sortBy").onchange=e=>{state.sortBy=e.target.value;persist();render()};$("#sortDir").onclick=()=>{state.sortDir=state.sortDir==="asc"?"desc":"asc";persist();render()};$("#compact").onclick=()=>{state.compact=!state.compact;persist();render()};
+  $("#selectAll").onchange=e=>{if(e.target.checked)a.forEach(m=>view.selected.add(m.key));else a.forEach(m=>view.selected.delete(m.key));render()};
+  $$("[data-select]").forEach(cb=>cb.onclick=e=>{const key=cb.dataset.select,i=Number(cb.dataset.index);if(e.shiftKey&&lastSelectedIndex!==null){const[min,max]=[lastSelectedIndex,i].sort((x,y)=>x-y);for(let j=min;j<=max;j++)view.selected.add(a[j].key)}else{view.selected.has(key)?view.selected.delete(key):view.selected.add(key)}lastSelectedIndex=i;render()});
+  $$("[data-toggle]").forEach(b=>b.onclick=()=>toggleEnabled(state.mods.find(m=>m.key===b.dataset.toggle)));
+  $$("[data-detail]").forEach(b=>b.onclick=()=>{view.detail=b.dataset.detail;detailDraft=null;render()});
+  $("#bulkOn")?.addEventListener("click",()=>bulkEnabled(true));$("#bulkOff")?.addEventListener("click",()=>bulkEnabled(false));$("#bulkDelete")?.addEventListener("click",bulkDelete);$("#clearSel")?.addEventListener("click",()=>{view.selected.clear();render()});
+  $("#bulkTag")?.addEventListener("change",e=>{const id=e.target.value;if(!id)return;for(const m of state.mods)if(view.selected.has(m.key)&&!m.tags.includes(id))m.tags.push(id);addHistory({kind:"bulk",label:`${view.selected.size}개 모드에 태그 추가`});persist();render()});
+  $("#reset").onclick=async()=>{if(!confirm("모든 목록과 History를 초기화할까?"))return;state=structuredClone(initial);const db=await dbOpen();db.transaction(STORE,"readwrite").objectStore(STORE).delete(DB_KEY);view.selected.clear();view.detail=null;render()};
+  $("#backdrop")?.addEventListener("click",()=>{view.detail=null;view.history=false;detailDraft=null;render()});$("#closeDrawer")?.addEventListener("click",()=>{view.detail=null;detailDraft=null;render()});$("#closeHistory")?.addEventListener("click",()=>{view.history=false;render()});
+  $$("[data-undo]").forEach(b=>b.onclick=()=>undo(b.dataset.undo));
+  if(view.detail){
+    const m=state.mods.find(x=>x.key===view.detail);$("#detailToggle").onclick=()=>toggleEnabled(m);$("#deleteMod").onclick=()=>removeMod(m);$("#createTag2").onclick=createTag;
+    $$("[data-detailtag]").forEach(b=>b.onclick=()=>{const id=b.dataset.detailtag,active=m.tags.includes(id);patchMod(m.key,{tags:active?m.tags.filter(x=>x!==id):[...m.tags,id]},`${active?"태그 제거":"태그 추가"}: ${tagById(id)?.name||id}`)});
+    $("#repName").oninput=e=>detailDraft.replacementName=e.target.value;$("#repUrl").oninput=e=>detailDraft.replacementUrl=e.target.value;$("#notes").oninput=e=>detailDraft.notes=e.target.value;
+    $("#saveDetail").onclick=()=>{const patch={notes:detailDraft.notes,replacementName:detailDraft.replacementName,replacementUrl:detailDraft.replacementUrl};patchMod(m.key,patch,"메모 / 대체 모드 수정");detailDraft=null;toast("저장했어.")};
+  }
+}
+document.addEventListener("dragover",e=>{e.preventDefault();if(!view.drag){view.drag=true;render()}});
+document.addEventListener("dragleave",e=>{if(e.clientX===0&&e.clientY===0){view.drag=false;render()}});
+document.addEventListener("drop",e=>{e.preventDefault();view.drag=false;importJars(e.dataTransfer.files)});
+document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="a"&&!["INPUT","TEXTAREA"].includes(document.activeElement.tagName)){e.preventDefault();for(const m of filteredMods())view.selected.add(m.key);render()}if(e.key==="Escape"){view.detail=null;view.history=false;render()}});
+(async()=>{try{const saved=await dbLoad();if(saved)state=saved}catch(e){console.error(e)}render()})();
+</script>
+</body>
+</html>
