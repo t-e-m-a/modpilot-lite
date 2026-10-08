@@ -1,19 +1,6 @@
 # ModPilot Lite — static V1
 
-Fabric 모드 30~150개 정도를 빠르게 관리하기 위한 단일 페이지 웹앱이야.
-
-## 실행
-
-### 가장 간단한 방법
-`index.html`을 브라우저에서 열어.
-
-단, JSZip을 CDN에서 불러오기 때문에 인터넷 연결이 필요해.  
-Modrinth 업데이트 확인 기능도 인터넷 연결이 필요해.
-
-### GitHub Pages
-이 폴더의 `index.html`을 저장소 루트에 올리고 GitHub Pages를 켜면 돼.
-
-별도 빌드 과정, npm, Node.js가 필요 없어.
+Fabric 모드 30~150개 정도를 빠르게 관리하기 위한 단일 페이지 웹앱.
 
 ## 구현된 기능
 
